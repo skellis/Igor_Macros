@@ -1,0 +1,25 @@
+#pragma rtGlobals=3		// Use modern global access method and strict wave access.
+
+Function wlResponse(WL,nmshiftx)
+	wave WL, nmshiftx
+	
+	variable Temp=2616.73268897
+	variable h=6.0626E-34
+	variable c=2.9979E+08
+	variable Kb=1.3806E-23
+	
+	Duplicate/O WL, WLKB; DelayUpdate
+	Make/O/D/N=0 coefs; DelayUpdate
+	FilterFIR/DIM=0/LO={0.235,0.3,101}/WINF=KaiserBessel20/COEF coefs, WLKB
+	
+	
+	Make /O/N=10000 BBL
+	SetScale/I x 0,1000,"nm", BBL
+	BBL=1/(X*10^-9)^5*1/(exp(h*c/(X*10^-9*Temp*Kb))-1)*WLKB[510]/(1/(nmshiftx[510]*10^-9)^5*1/(exp(h*c/(nmshiftx[510]*10^-9*Temp*Kb))-1))
+	Duplicate WLKB I_Response
+	I_Response=WLKB/BBL(nmshiftx)
+	
+	display I_Response vs nmshiftx
+
+	Return I_Response
+End
