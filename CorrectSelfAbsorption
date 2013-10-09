@@ -1,0 +1,41 @@
+#pragma rtGlobals=3		// Use modern global access method and strict wave access.
+Function correctSelfA(uvSpec,resRamanSpec,shiftx,laser,destinationWave,[meanPath])
+	//Set up variables
+	variable laser
+	variable meanPath
+	wave uvSpec, resRamanSpec, shiftx
+	string destinationWave
+	//mean path is the average path absorptive path experienced by photons emitted within the sample. 
+	//If your uv spectrum is 1mm and your cappillary is 1.5mm I.D. 
+	//and your signal is generated in the middle of the cappilary, then your meanPath should be about 0.6.
+	if (ParamisDefault(meanPath))
+		meanPath=.6	
+	endif
+	
+	//Create new variables xaxis
+	Duplicate/O uvSpec nu
+	Duplicate/O shiftx nuShiftx
+	nu=10^7/X
+	nuShiftx=10^7/laser-shiftx
+
+	//Impose Absorption Spectrum on correct resonance raman axis
+	duplicate/O resRamanSpec interpUVSpec
+	variable i
+	for(i=0;i<numpnts(resRamanSpec);i+=1)
+		interpUVSpec[i]=uvSpec(10^7/nushiftx[i])
+	endfor
+	
+	//Create a highly interpolated resonance Raman spectrum which has been scaled by 
+	//10^-abs(v) to correct for self absorption
+	duplicate/O resRamanSpec corrResRamanSpec
+	corrResRamanSpec=resRamanSpec*10^(-interpUVSpec*meanPath)
+	Interpolate2/T=3/N=(numpnts(resRamanSpec)*100)/F=1e-009/Y=$(destinationWave+"SA") shiftx, corrResRamanSpec
+	//Show what you've done	
+	display $(destinationWave+"SA")
+	appendtoGraph resRamanSpec vs shiftx
+
+	//Clean up
+	killwaves nu nushiftx interpUVSpec corrResRamanSpec
+	
+Return 0
+end
