@@ -1,0 +1,55 @@
+#pragma rtGlobals=3		// Use modern global access method and strict wave access.
+Function CalculateCrossSection(excitationWavelength)
+Variable excitationWavelength
+String standards
+//Function returns a differential cross sections based on literature values that I have looked up in various sources
+
+//A list of the solvents available
+standards = "Cyclohexane 881;Cyclohexane CH Region;NO_3 1047;SO_4 ;Benzene 992;Acetonitrile 918;"
+standards+="Acetonitrile 2249; Ethanol 881"
+
+Make/D/O/N=0 params
+Variable standard = 0 //The user will set this after interacting with the prompt
+
+//Prompt the user to choose a standard
+Prompt standard, "What standard are you using?",popup,standards
+DoPrompt "Choose the standard.", standard
+
+If(V_Flag)
+Print "Cancelled"
+Return 0 //user canceled
+EndIf
+//params[0]={K,ve,peakLocation}
+Switch(standard)
+case 1:
+params[0]= {90*10^-27,115000,802} //CHEX 802 Raman cross section measurements in the visible and ultraviolet using an integrating cavity: Application to benzene, cyclohexane, and cacodylate Mark O. Trulson and Richard A. Mathies 
+break
+case 2:
+params[0]= {280*10^-27,85000,2850} //Chex CH stretch Region
+break
+case 3:
+params[0]= {1.56*10^-28,52300,1047}//NO3 1047 Wavelength Dependence of the Preresonance Raman Cross Sections of CH3CN, SO42-, ClO4- and NO3-", J. M. Dudik, C. R. Johnson, and S. A. Asher, J. Chem. Phys. 1985, 82, 1732-1740.
+break
+case 4:
+params[0]={2.75*10^-26,13700,981}//SO3
+break
+case 5:
+params[0]= {7.04*10^-27,80000,992}//Benzene 992 Measurements of the absolute Raman cross sections of benzene K. T. Schomacker, J. K. Delaney,a) and P. M. Champion
+break
+case 6:
+params[0] = {2.26*10^-25,390000,918}//Acetonitrile 918
+break
+case 7:
+params[0] = {7.65*10^-27,116000,2249}//Acetonitrile 2249
+break
+case 8:
+Print "Ethanols CO stretch at 881 cm -1 has a differential cross section of 3.00*10^-14 A^2/molecule/Sr at 488 nm assume v^4 dependence"
+//Excited-State Structure and Dynamics of cis- and trans -Azobenzene from Resonance Raman Intensity Analysis Christina M. Stuart, Renee R. Frontiera, and Richard A. Mathies*
+endswitch
+
+//This assumes you are using photon counting. if you are energy counting then the factor (10^7/excitationWavelength)*(10^7/excitationWavelength-params[2])^3 is just (10^7/excitationWavelength)^4
+Make/D/O/N=1 difXC
+difXC=params[0]*(params[1]^2+(10^7/excitationWavelength)^2)^2/(params[1]^2-(10^7/excitationWavelength)^2)^4*(10^7/excitationWavelength)*(10^7/excitationWavelength-params[2])^3*10^16
+print "The differential cross section of your standard is: "+Num2str(difXC[0])+" angstroms squared per molecule per steradian."
+
+End
