@@ -1,0 +1,47 @@
+#pragma rtGlobals=3		// Use modern global access method and strict wave access.
+Function DisplayRawTimePoints(base,timePoints,[xwave])
+	//Ripped from Display WL
+	//A macro to display your raw FSRS data with every timePoint in it's own window. 
+	//Is useful for quickly hunting down bunked datapoints and missed flipFlopping.
+	String base;
+	Wave timepoints,xwave;
+
+
+	String wl //the list to be displayed
+String plusMinus
+
+String TN=""//Trace name
+
+Display //set up the display window
+
+Variable i=0 //my iterator
+Variable j=0 //my iterator
+For(j=0;j<numpnts(timePoints); j+=1)
+if(timePoints[j]<.1)
+	plusminus="m"
+else
+	plusminus="p"
+endif
+//rewrite the wavelist for each graph.
+wl = WaveList(base+plusminus+num2str(abs(timePoints[j]))+"_*",";","") 
+//makes a list of waves such that timepoints are distinct and the baseName is matched.
+Display //set up the display window
+For(i=0;i<ItemsInList(wl);i+=1)
+//loop through the list pulling out each WAVE
+print wl
+TN = StringFromList(i,wl, ";")
+If(WaveExists($TN))//Make sure the WAVE exists!
+//append the waves to the top graph, with or without an xwave as desired
+If(ParamIsDefault(XWave))
+AppendToGraph $TN
+Else
+AppendToGraph $TN vs XWave
+EndIf
+Else
+Print TN+" does not exist!"
+EndIf
+EndFor
+EndFor
+
+Return 0 //successful exit
+End
